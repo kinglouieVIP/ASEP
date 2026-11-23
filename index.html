@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ASEP Drill</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ASEP">
+<meta name="theme-color" content="#F1F3EF">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E7EAE6;--paper2:#F1F3EF;--ink:#14191C;--mid:#5C6A6E;--rule:#C3CAC4;--rule2:#D8DDD8;
+  --pass:#2F6B4F;--passbg:#E3EDE6;--fail:#9B2226;--failbg:#F2E2E1;--sig:#E8B800;--sigbg:#FBF1C7;
+  --disp:'IBM Plex Sans Condensed','Arial Narrow',system-ui,sans-serif;
+  --body:'IBM Plex Sans',-apple-system,system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
+button{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:5;background:var(--paper2);border-bottom:1px solid var(--rule);
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.brand{font-family:var(--disp);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:-.01em}
+.topsub{font-family:var(--mono);font-size:10.5px;color:var(--mid);letter-spacing:.06em;text-transform:uppercase;text-align:right}
+main{max-width:720px;margin:0 auto;padding:16px 16px 28px}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--ink);padding-bottom:env(safe-area-inset-bottom)}
+.tab{flex:1;background:none;border:0;color:#A9B3B5;font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;
+  text-transform:uppercase;padding:13px 2px 14px;cursor:pointer;border-top:3px solid transparent;min-height:50px}
+.tab[aria-current=page]{color:#fff;border-top-color:var(--sig)}
+:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+
+h2{font-family:var(--disp);font-weight:700;font-size:23px;margin:2px 0 12px;text-transform:uppercase;letter-spacing:-.01em}
+.eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mid);margin:24px 0 8px}
+.card{background:var(--paper2);border:1px solid var(--rule);padding:14px;margin-bottom:12px}
+.card p{margin:6px 0 0;font-size:14px;line-height:1.55}
+.muted{color:var(--mid)}
+.mono{font-family:var(--mono)}
+.small{font-size:12.5px}
+
+.btn{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;min-height:44px;
+  background:var(--ink);color:var(--paper);border:1px solid var(--ink);cursor:pointer}
+.btn.ghost{background:none;color:var(--ink);border-color:var(--rule)}
+.btn.full{width:100%}
+.btn[disabled]{opacity:.35;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* readiness */
+.ready-card{background:var(--ink);color:var(--paper);border:1px solid var(--ink);padding:14px;margin-bottom:12px}
+.ready-card .eyebrow{color:#A9B3B5;margin:0 0 10px}
+.crit{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:start;padding:8px 0;border-top:1px solid #2B3236;font-size:13.5px;line-height:1.4}
+.crit:first-of-type{border-top:0}
+.crit .box{width:16px;height:16px;border:1.5px solid #7D898C;margin-top:2px}
+.crit.ok .box{background:var(--sig);border-color:var(--sig)}
+.crit .val{font-family:var(--mono);font-size:11.5px;color:#C9D0D1;white-space:nowrap}
+.go-banner{background:var(--sig);color:var(--ink);padding:14px;margin-bottom:12px;border:1px solid #b89400}
+.go-banner b{font-family:var(--disp);font-size:20px;text-transform:uppercase;display:block;margin-bottom:4px}
+.go-banner p{margin:0;font-size:13.5px;line-height:1.5}
+
+/* plan */
+.day{display:grid;grid-template-columns:44px 1fr;gap:12px;border-top:1px solid var(--rule);padding:14px 0}
+.day:last-child{border-bottom:1px solid var(--rule)}
+.daychk{width:44px;height:44px;border:1.5px solid var(--rule);background:var(--paper2);cursor:pointer;
+  font-family:var(--disp);font-weight:700;font-size:19px;display:flex;align-items:center;justify-content:center}
+.daychk[aria-pressed=true]{background:var(--ink);color:var(--sig);border-color:var(--ink)}
+.day h3{margin:0;font-size:16px;font-family:var(--disp);font-weight:700}
+.day .cl{font-family:var(--mono);font-size:10.5px;color:var(--mid);margin-top:2px}
+.day p{margin:7px 0 0;font-size:13.5px;line-height:1.55}
+.day .exit{margin-top:8px;font-size:12.5px;line-height:1.5;border-left:3px solid var(--sig);padding-left:9px}
+.day.done h3,.day.done p{opacity:.55}
+
+.fact{border-left:3px solid var(--sig)}
+.fact .eyebrow{margin:0 0 6px}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.chip{font-family:var(--mono);font-size:11px;padding:8px 10px;min-height:36px;border:1px solid var(--rule);background:var(--paper);color:var(--mid);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* modes */
+.mode{display:block;width:100%;text-align:left;background:var(--paper2);border:1px solid var(--rule);padding:14px;margin-bottom:8px;cursor:pointer}
+.mode b{font-family:var(--disp);font-size:17px;display:block}
+.mode span{font-size:13px;color:var(--mid);line-height:1.45;display:block;margin-top:3px}
+.mode:hover{border-color:var(--ink)}
+
+/* question */
+.qmeta{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:14px;flex-wrap:wrap}
+.qid{font-family:var(--mono);font-size:11px;color:var(--mid)}
+.tag{background:var(--ink);color:var(--paper);padding:2px 6px;margin-right:7px}
+.qtext{font-size:17px;line-height:1.5;margin:0 0 14px;font-weight:500}
+.opt{width:100%;text-align:left;border:1px solid var(--rule);background:var(--paper2);padding:13px 14px;margin-bottom:7px;
+  font-size:15px;line-height:1.45;cursor:pointer;display:grid;grid-template-columns:24px 1fr;gap:4px;min-height:48px}
+.opt .lt{font-family:var(--mono);font-size:12px;color:var(--mid);padding-top:2px}
+.opt.correct{border:2px solid var(--pass);background:var(--passbg)}
+.opt.correct .lt{color:var(--pass);font-weight:600}
+.opt.wrong{border:2px solid var(--fail);background:var(--failbg)}
+.opt.wrong .lt{color:var(--fail);font-weight:600}
+.opt[disabled]{cursor:default}
+.why{border-left:3px solid var(--sig);padding:11px 13px;background:var(--paper2);font-size:14px;line-height:1.6;margin-top:12px}
+.why b{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;display:block;color:var(--mid);margin-bottom:3px}
+.progressbar{height:4px;background:var(--rule2);margin:-6px 0 14px}
+.progressbar i{display:block;height:100%;background:var(--ink)}
+
+.big{font-family:var(--disp);font-weight:700;font-size:64px;line-height:1;text-align:center;margin-top:10px}
+.verdict{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mid);text-align:center;margin-top:6px}
+.kv{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12px;padding:7px 0;border-bottom:1px solid var(--rule2)}
+.miss{border-top:1px solid var(--rule2);padding:10px 0;font-size:13.5px;line-height:1.5}
+.miss .a{color:var(--pass);font-weight:600}
+
+/* recall */
+.timer{font-family:var(--mono);font-size:44px;font-weight:600;text-align:center;letter-spacing:.02em;margin:4px 0 0}
+.timer.over{color:var(--fail)}
+.target{font-family:var(--mono);font-size:11px;color:var(--mid);text-align:center;letter-spacing:.1em;text-transform:uppercase}
+.groups{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:14px 0 10px}
+.grp{border:1.5px solid var(--rule);background:var(--paper2);padding:9px 10px;text-align:left;cursor:pointer;min-height:56px}
+.grp b{display:block;font-family:var(--disp);font-size:14.5px}
+.grp span{font-family:var(--mono);font-size:11px;color:var(--mid)}
+.grp[aria-pressed=true]{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.grp[aria-pressed=true] span{color:var(--sig)}
+.entry{display:flex;gap:6px}
+.entry input{flex:1;font:inherit;font-size:16px;padding:11px 12px;border:1.5px solid var(--ink);background:#fff;border-radius:0;min-width:0}
+.fb{font-family:var(--mono);font-size:12px;min-height:20px;margin-top:6px}
+.fb.ok{color:var(--pass)}.fb.bad{color:var(--fail)}
+.found{margin-top:12px}
+.found .gl{font-family:var(--mono);font-size:10.5px;color:var(--mid);letter-spacing:.08em;text-transform:uppercase;margin:10px 0 4px}
+.pill{display:inline-block;font-size:12.5px;background:var(--passbg);border:1px solid #BFD3C5;padding:3px 7px;margin:0 4px 4px 0}
+.pill.missing{background:var(--failbg);border-color:#E0BDBB}
+
+/* learn */
+details{border-top:1px solid var(--rule);padding:0}
+details:last-of-type{border-bottom:1px solid var(--rule)}
+summary{list-style:none;cursor:pointer;padding:14px 2px;font-family:var(--disp);font-weight:700;font-size:16.5px;display:flex;justify-content:space-between;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'+';font-family:var(--mono);font-weight:400;font-size:18px;color:var(--mid)}
+details[open] summary::after{content:'–'}
+.lbody{padding:0 2px 16px;font-size:14px;line-height:1.6}
+.lbody h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin:14px 0 4px;font-weight:600}
+.lbody ul{margin:4px 0;padding-left:18px}
+.lbody li{margin:3px 0}
+.pr{display:grid;grid-template-columns:58px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--rule2);font-size:13.5px;line-height:1.45}
+.pr .c{font-family:var(--mono);font-size:11px;color:var(--mid);padding-top:2px}
+.pr b{font-weight:600}
+
+/* progress */
+.bar{display:grid;grid-template-columns:120px 1fr 64px;gap:10px;align-items:center;padding:6px 0;font-size:12.5px}
+.bar .tr{height:10px;background:var(--rule2);position:relative}
+.bar .tr i{position:absolute;left:0;top:0;bottom:0;background:var(--ink)}
+.bar .tr .line{position:absolute;left:70%;top:-3px;bottom:-3px;width:1px;background:var(--fail)}
+.bar .v{font-family:var(--mono);font-size:11px;text-align:right;color:var(--mid)}
+.cells{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px}
+.cell{width:28px;height:28px;border:1px solid var(--rule);background:var(--paper2);font-family:var(--mono);font-size:9.5px;display:flex;align-items:center;justify-content:center;color:var(--mid)}
+.cell.hit{background:var(--sig);border-color:#b89400;color:var(--ink);font-weight:600}
+.cell.miss{background:var(--fail);border-color:var(--fail);color:#fff;font-weight:600}
+textarea{width:100%;min-height:90px;font-family:var(--mono);font-size:11px;padding:8px;border:1px solid var(--rule);background:#fff}
+
+@media (max-width:420px){
+  .bar{grid-template-columns:96px 1fr 56px}
+  .qtext{font-size:16px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .opt,.chip,.grp,.daychk{transition:background .12s,border-color .12s}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">ASEP Drill</div>
+  <div class="topsub" id="topsub">SE Handbook 5th Ed</div>
+</header>
+<main id="main" aria-live="polite"></main>
+<nav class="tabs" aria-label="Sections">
+  <button class="tab" data-t="today">Today</button>
+  <button class="tab" data-t="drill">Drill</button>
+  <button class="tab" data-t="recall">Recall</button>
+  <button class="tab" data-t="learn">Learn</button>
+  <button class="tab" data-t="progress">Progress</button>
+</nav>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= DATA ================= */
+const AREAS={FND:"Ch1 Concepts",LC:"Ch2 Life cycle",AGR:"Agreement",OPE:"Org enabling",TMP:"Technical mgmt",TP:"Technical",QC:"Ch3 Quality char.",AM:"Ch3 Methods",TAI:"Ch4 Tailoring",PRA:"Ch5 Practice"};
+const GROUPS=[
+  {k:"AGR",n:"Agreement",c:"2.3.2"},
+  {k:"OPE",n:"Org project-enabling",c:"2.3.3"},
+  {k:"TMP",n:"Technical management",c:"2.3.4"},
+  {k:"TP",n:"Technical",c:"2.3.5"}
+];
+/* id, group, name, one-line purpose (paraphrased), recall pattern */
+const PROCS=[
+ ["acq","AGR","Acquisition","Obtain a product or service that meets the acquirer's requirements.",/acqui/],
+ ["sup","AGR","Supply","Provide an acquirer with a product or service that meets agreed requirements.",/suppl/],
+ ["lcmm","OPE","Life Cycle Model Management","Define and maintain the organisation's policies, processes and life cycle models.",/life ?cycle|lifecycle|^lcm/],
+ ["inf","OPE","Infrastructure Management","Provide the facilities, tools and services projects need.",/infra/],
+ ["port","OPE","Portfolio Management","Start and sustain the right set of projects to meet strategy.",/portfol/],
+ ["hrm","OPE","Human Resource Management","Provide the people the organisation needs and keep them competent.",/human|^hr\b/],
+ ["qm","OPE","Quality Management","Ensure products, services and the quality system meet quality objectives and satisfy customers.",/quality ?man|^qm$/],
+ ["km","OPE","Knowledge Management","Build the capability to reuse existing knowledge across the organisation.",/knowl/],
+ ["pp","TMP","Project Planning","Produce and coordinate effective, workable plans (incl. the SEMP).",/plan/],
+ ["pac","TMP","Project Assessment and Control","Check plans stay feasible, establish status, and direct execution back to plan.",/assess|control|^pac$/],
+ ["dm","TMP","Decision Management","Structured, objective evaluation of alternatives to pick the best course of action.",/decis/],
+ ["rm","TMP","Risk Management","Identify, analyse, treat and monitor risks (and opportunities) continually.",/risk/],
+ ["cm","TMP","Configuration Management","Manage system and element configurations across the life cycle.",/config|^cm$/],
+ ["im","TMP","Information Management","Generate, keep, retrieve, share and dispose of information for designated stakeholders.",/inform|^info|^im$/],
+ ["meas","TMP","Measurement","Collect, analyse and report objective data to meet information needs.",/measur/],
+ ["qa","TMP","Quality Assurance","Ensure the organisation's quality management is effectively applied to the project.",/quality ?ass|assur|^qa$/],
+ ["bma","TP","Business or Mission Analysis","Define the problem or opportunity, characterise the solution space, find candidate solution classes.",/business|mission|^bma$/],
+ ["snrd","TP","Stakeholder Needs and Requirements Definition","Define what users and other stakeholders need, in a defined environment.",/stake/],
+ ["srd","TP","System Requirements Definition","Turn the user-oriented view into a technical view of the solution.",/system ?req|sys ?req|^srd$|^req/],
+ ["sad","TP","System Architecture Definition","Generate alternatives, select, and express the architecture in consistent views and models.",/archit/],
+ ["dd","TP","Design Definition","Provide enough detailed data to realise the solution per requirements and architecture.",/design/],
+ ["sa","TP","System Analysis","Provide rigorous data and information to support technical understanding and decisions.",/analys/],
+ ["impl","TP","Implementation","Realise a specified system element.",/implem/],
+ ["integ","TP","Integration","Combine system elements into a realised system that meets system requirements.",/integr/],
+ ["verif","TP","Verification","Objective evidence that a system, element or artefact meets its specified requirements.",/verif/],
+ ["trans","TP","Transition","Establish the system's capability to deliver services in the operational environment.",/transit/],
+ ["valid","TP","Validation","Objective evidence that the system in use meets needs and intended use in its intended environment.",/valid/],
+ ["op","TP","Operation","Use the system to deliver its services.",/operat/],
+ ["maint","TP","Maintenance","Sustain the system's capability to provide a service.",/maint/],
+ ["disp","TP","Disposal","End a system's existence for its intended use and deal properly with what remains.",/dispos/]
+].map(r=>({id:r[0],g:r[1],name:r[2],purpose:r[3],rx:r[4]}));
+(function(){const cnt={};PROCS.forEach(p=>{cnt[p.g]=(cnt[p.g]||0)+1;p.n=cnt[p.g];p.c=GROUPS.find(g=>g.k===p.g).c+"."+p.n;});})();
+const PI={};PROCS.forEach(p=>PI[p.id]=p);
+const MATCH_ORDER=["bma","snrd","srd","sad","dd","sa","cm","qa","qm","pac","pp","lcmm","acq","sup","inf","port","hrm","km","dm","rm","im","meas","impl","integ","verif","trans","valid","op","maint","disp"];
+
+const PLAN=[
+ {d:1,h:"2.5 h",t:"The 30 processes",cl:"§2.3 · purpose statement + IPO diagram only",
+  p:"The spine of the exam. Read each process's purpose and its inputs/outputs figure, not the narrative. Then close the book and rebuild the four groups from memory.",
+  x:"Recall sprint: all 30, correct groups, under 6:00."},
+ {d:2,h:"2 h",t:"Life cycle scaffolding",cl:"§2.1–2.2 · §2.3.1.2",
+  p:"Six stages and decision gates, Table 2.1 reviews and audits, Figure 2.4 baselines, the three model approaches, and concurrency vs iteration vs recursion.",
+  x:"Place every review against its baseline without looking."},
+ {d:3,h:"1.5 h",t:"Concepts and foundations",cl:"Ch 1",
+  p:"SoI and boundary, emergence, enabling vs interfacing vs interoperating, states vs modes, complexity, aleatory vs epistemic, the cognitive-bias table, principles vs heuristics, systems thinking.",
+  x:"One-line discriminator for each pair or trio."},
+ {d:4,h:"2 h",t:"Quality characteristics and methods",cl:"§3.1 (12 QCs) · §3.2 (8 methods)",
+  p:"List work. Interface management and traceability each have their own learning objective, so give them extra attention. The other methods are skim-level.",
+  x:"Name all 12 QCs and 8 methods with a one-line purpose each."},
+ {d:5,h:"1.5 h",t:"Tailoring, approaches, system types",cl:"Ch 4",
+  p:"Tailoring; MBSE, agile, lean, PLE; system types; the four SoS types (a dedicated learning objective). §4.4 domains: headings only.",
+  x:"Explain what tailoring is for, and distinguish the four SoS types."},
+ {d:6,h:"1.5 h",t:"Practice, glossary, N²",cl:"Ch 5 · Appendix C · Appendix D · skip Ch 6",
+  p:"Competencies, ethics, SE vs PM and other disciplines, digital engineering. Read Appendix C end to end — cheapest marks in the book. Glance at the N² diagram.",
+  x:"No term in Appendix C reads as unfamiliar."},
+ {d:7,h:"2 h",t:"Mock and gap closure",cl:"Drill → Mock exam · Weak spots",
+  p:"Run a mock under time, then Weak spots and Review misses. Re-read only the clauses you missed.",
+  x:"Readiness card fully lit."}
+];
+
+const FACTS=[
+ "The exam is 100 questions in 120 minutes — about 72 seconds each. Flag and move on rather than stalling.",
+ "Every INCOSE learning objective for the v5 exam is pitched at 'awareness level' — recognition beats deep application.",
+ "Chapter 6 case studies are not in the published learning objectives. Don't spend time there.",
+ "30 processes: Agreement 2, Org project-enabling 6, Technical management 8, Technical 14.",
+ "Quality Management is organisational. Quality Assurance is technical management. Classic trap.",
+ "Knowledge Management is organisational reuse. Information Management is project-level information handling.",
+ "Implementation realises one element. Integration combines elements. Transition fields the system.",
+ "Operation uses the system; Maintenance sustains it. 'Support' is a life cycle stage, not a process.",
+ "Verification: built right, against specified requirements. Validation: right system, in use, in its intended environment.",
+ "Verification can apply to artefacts such as a requirement set or a model, not only to hardware.",
+ "The four verification methods: inspection, analysis, demonstration, test.",
+ "Recursion repeats a process down or up the hierarchy. Iteration repeats it at the same level to refine.",
+ "Utilization and Support stages run in parallel, not in sequence.",
+ "Functional baseline at SRR/SFR, allocated at PDR, initial product at CDR, final product after PCA.",
+ "FCA and PCA are audits. ASR, SRR, SFR, PDR, CDR, TRR, SVR and PRR are reviews.",
+ "Reviews should be event-driven or risk-driven, not schedule-driven.",
+ "Entry gates check readiness and resources; exit gates check objectives met and forward risk acceptable.",
+ "Life cycle model approaches: sequential, incremental, evolutionary. Waterfall, spiral and agile sit inside these.",
+ "Evolutionary differs from incremental because the end state isn't fully known at the start.",
+ "v5 calls the '-ilities' quality characteristics. There are 12, in §3.1.2–3.1.13.",
+ "Agility (§3.1.3) is a system property. Agile (§4.2.2) is a development approach.",
+ "Resilience covers disruptions you didn't anticipate; reliability covers known failure modes.",
+ "Safety guards against harm from the system's own behaviour; security guards against deliberate hostile action.",
+ "Enabling systems support the SoI's life cycle (production, transport, training) but aren't part of the delivered SoI.",
+ "Emergence is a whole-system property arising from interaction. It can be good or bad, expected or not.",
+ "Modes are deliberate operational configurations; states describe the system's condition at a point in time.",
+ "Principles transcend life cycle, system type and context, and are not 'how to'. Heuristics come from experience.",
+ "Aleatory uncertainty is inherent randomness. Epistemic uncertainty is lack of knowledge and reduces with data.",
+ "Anchoring: early numbers pull later estimates. Mitigate by eliciting the extremes before the expected value.",
+ "Risk Management in v5 covers opportunities as well as threats.",
+ "Trade studies: Decision Management gives the framework, System Analysis supplies the data.",
+ "TPMs are collected under Measurement and consumed by Project Assessment and Control.",
+ "Project Planning produces the SEMP. Planned reviews and audits are recorded there.",
+ "SoS types: directed, acknowledged, collaborative, virtual — tightest to loosest central authority.",
+ "With COTS, the product constrains the requirements, and the vendor controls its evolution.",
+ "Tailoring adapts process application to context, scale and risk. It can add rigour as well as remove it.",
+ "MBSE is a methodology; SysML is a language. Don't let a question conflate the two.",
+ "A viewpoint specifies how to build and read a view; the view is the instance for a stakeholder concern.",
+ "Digital engineering is broader than MBSE: data-centric, cross-discipline, whole life cycle.",
+ "Where your programme's usage and the handbook's wording differ, the handbook is the answer key."
+];
+
+const Q = [
+/* ---------- Ch1 fundamentals ---------- */
+{a:"FND",c:"1.3.1",q:"A defence radar is being developed. The transport lorry used to move it between sites is not delivered to the customer but is essential to fielding it. In INCOSE terms the lorry is:",o:["An enabling system","A constituent system of a system of systems","An interoperating system","A system element of the system of interest"],k:0,w:"Enabling systems support the life cycle of the SoI (development, production, transport, training, disposal) without being part of the delivered SoI itself. Interfacing systems exchange with it in operation; interoperating systems work jointly toward a shared outcome."},
+{a:"FND",c:"1.3.2",q:"Emergence is best characterised as:",o:["System behaviour arising from the interaction of elements that is not present in any element alone","Any behaviour that was not written down in the requirements","The tendency of complex systems to degrade over time","Unintended behaviour introduced by integration defects"],k:0,w:"Emergence is a property of the whole arising from interaction. It can be desirable or undesirable, expected or unexpected — it is not a synonym for defect or for requirements escape."},
+{a:"FND",c:"1.3.1",q:"The system boundary primarily serves to:",o:["Separate the system of interest from its environment, defining what is under design control","Identify which suppliers hold contractual responsibility","Mark the physical enclosure of the hardware","Define the security perimeter of the system"],k:0,w:"The boundary defines what is inside the SoI and therefore under the design authority's control, and what is external and must instead be treated as environment or interfacing systems."},
+{a:"FND",c:"1.3.6",q:"A missile has 'captive carry', 'free flight' and 'terminal' behaviours. These are best described as:",o:["Modes, being distinct operational configurations the system is deliberately placed in","States, being conditions determined by internal variables","Life cycle stages","Quality characteristics"],k:0,w:"Modes are deliberate operational configurations offering a defined behaviour set. States describe the condition of the system at a point in time. The handbook distinguishes them, and the exam tests the distinction."},
+{a:"FND",c:"1.4.3",q:"Which statement is true of an INCOSE systems engineering principle, as distinct from a heuristic?",o:["It transcends life cycle model, system type and context, and is not a 'how to' statement","It is derived directly from an individual practitioner's project experience","It is mandatory and auditable under ISO/IEC/IEEE 15288","It applies only to the development stages of the life cycle"],k:0,w:"Principles are transcendent, non-prescriptive guidance propositions. Heuristics come from practical experience. Conventions come from social agreement; models from theory. All are guidance propositions but differ in origin and authority."},
+{a:"FND",c:"1.4.2",q:"A technology developer assessing the readiness of their own subsystem is likely to overstate it because funding depends on the answer. This is:",o:["Motivational bias","Anchoring","Availability bias","Framing"],k:0,w:"Motivational bias arises where the assessor has an incentive in the outcome. Anchoring is contamination by an initial estimate; availability over-weights vivid or recent events; framing is distortion by how the question is posed."},
+{a:"FND",c:"1.4.2",q:"An early cost estimate of £4m is circulated, and all later estimates cluster near it. The bias at work is:",o:["Anchoring","Confirmation bias","Groupthink","Representativeness"],k:0,w:"Anchoring is the pull of an initial value on subsequent judgements. The handbook's mitigation is to elicit range extremes before asking for an expected value."},
+{a:"FND",c:"1.3.7",q:"In the handbook's treatment, complexity is primarily associated with:",o:["Difficulty in predicting behaviour arising from the number and nature of interactions","The number of requirements in the specification","The cost and schedule of the programme","The number of suppliers in the supply chain"],k:0,w:"Complexity concerns interaction and consequent unpredictability, not mere size. A system can be large and complicated without being complex."},
+{a:"FND",c:"1.3.5",q:"The 'horizontal view' of a system refers to:",o:["Interrelationships among elements at a given level of architectural decomposition","The organisational reporting structure of the project team","The sequence of life cycle stages","The relationship between the SoI and its enabling systems"],k:0,w:"Horizontal covers elements, requirements, IV&V activities and artefacts at one level; the vertical view covers derivation up and down the hierarchy."},
+{a:"FND",c:"1.1",q:"Which best reflects the handbook's framing of systems engineering?",o:["A transdisciplinary and integrative approach to enabling the successful realisation and use of engineered systems","A management discipline for controlling cost, schedule and scope on engineering projects","The application of design methods to complex hardware","A quality assurance function within engineering organisations"],k:0,w:"The 'transdisciplinary and integrative' framing is INCOSE's own and appears repeatedly. SE spans full life cycle realisation and use, not just design or project control."},
+{a:"FND",c:"1.4.1",q:"Aleatory uncertainty differs from epistemic uncertainty in that it:",o:["Arises from inherent randomness and cannot be reduced by gathering more knowledge","Arises from lack of knowledge and reduces as data is gathered","Applies only to software systems","Is a synonym for programmatic risk"],k:0,w:"Aleatory uncertainty is irreducible variability; epistemic uncertainty is reducible ignorance. Confusing the two leads to over-promising what analysis can eliminate."},
+
+/* ---------- Ch2 life cycle ---------- */
+{a:"LC",c:"2.1.2",q:"The generic life cycle stages in ISO/IEC/IEEE 15288 are:",o:["Concept, Development, Production, Utilization, Support, Retirement","Concept, Design, Build, Test, Deploy, Dispose","Initiation, Planning, Execution, Monitoring, Closure","Requirements, Architecture, Implementation, Verification, Validation, Operation"],k:0,w:"Six generic stages. Note Utilization and Support run in parallel, not in sequence — a point the exam likes. Other frameworks (DoD, NASA, DoE) map onto these with different names."},
+{a:"LC",c:"2.1.2",q:"In the generic life cycle, Utilization and Support stages are best described as:",o:["Concurrent, with support sustaining the system while it is in use","Sequential, with support beginning after utilization ends","Alternatives, with only one selected per programme","Sub-stages of the Production stage"],k:0,w:"Support runs alongside Utilization, providing logistics, maintenance and sustainment while the system delivers service."},
+{a:"LC",c:"2.1.3",q:"The purpose of an entry decision gate for a life cycle stage is to confirm that:",o:["Entry criteria are satisfied and the resources needed for the stage are available","The previous stage was delivered within budget","The design is technically compliant with all requirements","The supplier has been formally contracted"],k:0,w:"Entry gates check readiness and resourcing. Exit gates check that stage objectives are met and that forward risk is acceptable."},
+{a:"LC",c:"2.1.4",q:"Which of the following is an audit rather than a technical review?",o:["Physical Configuration Audit","System Requirements Review","Preliminary Design Review","Test Readiness Review"],k:0,w:"Audits (FCA, PCA) examine compliance evidence and product configuration against released definition information. Reviews assess technical progress against agreed criteria at life cycle transition points."},
+{a:"LC",c:"2.1.4",q:"The Functional Baseline is normally established at which review?",o:["System Requirements Review","Preliminary Design Review","Critical Design Review","Physical Configuration Audit"],k:0,w:"Functional baseline at SRR (extending to SFR), allocated baseline at PDR, initial product baseline at CDR, final product baseline after PCA. This chain is high-yield."},
+{a:"LC",c:"2.1.4",q:"The Allocated Baseline is associated with:",o:["Preliminary Design Review","System Functional Review","Test Readiness Review","Production Readiness Review"],k:0,w:"PDR establishes the allocated baseline — requirements allocated down to system elements, with a design approach shown to be feasible."},
+{a:"LC",c:"2.1.4",q:"Handbook good practice is that technical reviews should be:",o:["Risk-driven or event-driven, not schedule-driven","Held on fixed calendar dates to protect programme rhythm","Chaired by the customer in all cases","Conducted only once at each level of the hierarchy"],k:0,w:"Reviews should occur when entry criteria are met or when risk warrants, not because a date has arrived. The handbook also recommends multiple instances across hierarchy levels and increments."},
+{a:"LC",c:"2.1.4",q:"Where should the set of technical reviews and audits for a project be recorded?",o:["The Systems Engineering Management Plan, and reflected in the schedule","The system requirements specification","The configuration management database","The risk register"],k:0,w:"The SEMP captures the planned technical reviews and audits; the schedule reflects them. Tailoring the set to the project is expected, including eliminating unnecessary reviews."},
+{a:"LC",c:"2.2",q:"The three groupings of life cycle model approach are:",o:["Sequential, incremental, evolutionary","Waterfall, spiral, agile","Predictive, adaptive, hybrid","Linear, iterative, recursive"],k:0,w:"Sequential, incremental and evolutionary. Waterfall, spiral and agile are specific models that sit within these groupings."},
+{a:"LC",c:"2.2.3",q:"An evolutionary approach is distinguished from an incremental approach principally because:",o:["Requirements are not fully known at the outset and are refined through successive cycles","It delivers usable capability at the end of each cycle","It is only applicable to software","It requires a fixed architecture before development starts"],k:0,w:"Incremental development builds toward a known end state in defined chunks. Evolutionary approaches accept that the target is not fully known and let learning from each cycle shape the next."},
+{a:"LC",c:"2.3.1.2",q:"Applying the same process to successive levels of the system hierarchy is described as:",o:["Recursion","Iteration","Concurrency","Tailoring"],k:0,w:"Recursion is repetition across levels of the hierarchy. Iteration is repetition at the same level to refine. Concurrency is processes running at the same time. Precise discrimination is examinable."},
+{a:"LC",c:"2.3.1.2",q:"Repeating a process at the same level to refine an outcome is:",o:["Iteration","Recursion","Decomposition","Allocation"],k:0,w:"Iteration refines within a level; recursion applies down (or up) levels."},
+{a:"LC",c:"2.3.1",q:"How many life cycle processes does the handbook describe, and in how many groups?",o:["30 processes in 4 groups","25 processes in 4 groups","30 processes in 5 groups","28 processes in 3 groups"],k:0,w:"Agreement (2), Organizational Project-Enabling (6), Technical Management (8), Technical (14) = 30. Memorise the counts as a checksum when reconstructing the lists."},
+{a:"LC",c:"2.1.1",q:"The primary rationale for dividing a life cycle into stages is to:",o:["Create defined points at which decisions about continuing, changing or stopping can be made","Allocate budget evenly across the programme","Match the organisation's departmental structure","Comply with contractual reporting requirements"],k:0,w:"Stages exist to enable decision-making at key points. Relative durations of stages are a programmatic concern and secondary to that rationale."},
+
+/* ---------- Agreement ---------- */
+{a:"AGR",c:"2.3.2.1",q:"The purpose of the Acquisition process is to:",o:["Obtain a product or service in accordance with the acquirer's requirements","Select the lowest-cost compliant supplier","Establish the contractual terms governing a programme","Define the requirements a supplier must meet"],k:0,w:"Acquisition and Supply are the two Agreement processes and are mirror images: Acquisition obtains, Supply provides. Both are examinable mainly on which side of the agreement they sit."},
+{a:"AGR",c:"2.3.2.2",q:"The Supply process exists to:",o:["Provide an acquirer with a product or service meeting agreed requirements","Manage the flow of parts into manufacturing","Qualify sub-tier suppliers against quality standards","Negotiate commercial terms with the customer"],k:0,w:"Supply is the supplier-side counterpart to Acquisition. Do not confuse it with logistics or supply chain management, which sit under Logistics Engineering as a quality characteristic."},
+
+/* ---------- Org project-enabling ---------- */
+{a:"OPE",c:"2.3.3.3",q:"Deciding which projects the organisation should initiate and continue to fund, against strategic objectives, is the concern of:",o:["Portfolio Management","Project Planning","Life Cycle Model Management","Infrastructure Management"],k:0,w:"Portfolio Management initiates and sustains the set of projects that meet organisational strategy. It sits at organisation level, above any individual project."},
+{a:"OPE",c:"2.3.3.1",q:"Defining and maintaining the policies, processes and life cycle models available for use across the organisation is:",o:["Life Cycle Model Management","Quality Management","Knowledge Management","Project Assessment and Control"],k:0,w:"Life Cycle Model Management is the organisation-level process that makes standard processes and models available; projects then tailor from them."},
+{a:"OPE",c:"2.3.3.6",q:"Building the capability and assets that let an organisation re-apply existing knowledge to new opportunities is:",o:["Knowledge Management","Information Management","Infrastructure Management","Human Resource Management"],k:0,w:"Knowledge Management is organisational and about reuse across projects. Information Management is a Technical Management process concerned with handling designated information within a project."},
+{a:"OPE",c:"2.3.3.5",q:"Quality Management sits in which process group?",o:["Organizational Project-Enabling","Technical Management","Technical","Agreement"],k:0,w:"Quality Management is organisational; Quality Assurance is the project-level Technical Management process that ensures the organisation's Quality Management process is effectively applied to the project. This pairing is a classic exam trap."},
+{a:"OPE",c:"2.3.3.4",q:"Providing the organisation with necessary human resources and maintaining their competencies is:",o:["Human Resource Management","Project Planning","Knowledge Management","Infrastructure Management"],k:0,w:"An Organizational Project-Enabling process. Project Planning consumes resources; HR Management provides and sustains them."},
+{a:"OPE",c:"2.3.3.2",q:"Provision of facilities, tools and services to projects is the concern of:",o:["Infrastructure Management","Portfolio Management","Project Planning","Quality Management"],k:0,w:"Infrastructure Management provides the enabling infrastructure and services across the life cycle to support organisation and project objectives."},
+
+/* ---------- Technical management ---------- */
+{a:"TMP",c:"2.3.4.3",q:"The Decision Management process exists to:",o:["Provide a structured analytical framework for evaluating alternatives and selecting the most beneficial course of action","Record decisions taken by the project board","Escalate technical issues to the design authority","Assess whether project plans remain feasible"],k:0,w:"Decision Management is about objectively identifying, characterising and evaluating alternatives at any point in the life cycle — trade studies live here."},
+{a:"TMP",c:"2.3.4.4",q:"The Risk Management process is described as acting to:",o:["Identify, analyse, treat and monitor risks continually","Eliminate all risks before design freeze","Transfer risk to suppliers through contract terms","Quantify risk exposure for financial reporting"],k:0,w:"Four verbs, and 'continually' matters — risk management is not a stage-gated activity. The handbook treats opportunity alongside risk."},
+{a:"TMP",c:"2.3.4.5",q:"Configuration Management's purpose is to:",o:["Manage system and system element configurations over their life cycle","Control access to the engineering data repository","Ensure designs comply with applicable standards","Track approved changes to the project schedule"],k:0,w:"CM covers identification, control, status accounting and audit of configurations across the life cycle. Baselines and change control are its instruments."},
+{a:"TMP",c:"2.3.4.7",q:"Collecting, analysing and reporting objective data to address information needs about products, services and processes is:",o:["Measurement","Quality Assurance","Project Assessment and Control","Information Management"],k:0,w:"Measurement supplies the objective data; Project Assessment and Control uses it to determine status and direct execution. Keep the supplier and consumer of the data distinct."},
+{a:"TMP",c:"2.3.4.2",q:"Determining project status and directing execution so performance follows plans is the purpose of:",o:["Project Assessment and Control","Project Planning","Measurement","Quality Assurance"],k:0,w:"Planning produces the plans; Assessment and Control checks alignment and feasibility, determines status, and directs execution to meet objectives."},
+{a:"TMP",c:"2.3.4.8",q:"Quality Assurance, as a Technical Management process, principally acts to:",o:["Ensure the organisation's Quality Management process is effectively applied to the project","Test products against their specified requirements","Set the organisation's quality objectives","Audit suppliers against ISO 9001"],k:0,w:"QA is the project-level application of organisational Quality Management. Testing products against requirements is Verification, a Technical process — a distinction the exam probes."},
+{a:"TMP",c:"2.3.4.6",q:"Generating, retaining, retrieving and disposing of information for designated stakeholders is:",o:["Information Management","Knowledge Management","Configuration Management","Measurement"],k:0,w:"Information Management is project-level handling of information items. Knowledge Management is organisational reuse of know-how."},
+{a:"TMP",c:"2.3.4.1",q:"Technical Performance Measures are most directly associated with which process pairing?",o:["Measurement, feeding Project Assessment and Control","Verification, feeding Validation","Risk Management, feeding Decision Management","System Analysis, feeding Design Definition"],k:0,w:"TPMs are defined and collected under Measurement and consumed by Project Assessment and Control to judge technical progress against plan."},
+{a:"TMP",c:"2.3.4.1",q:"Which process produces the Systems Engineering Management Plan?",o:["Project Planning","Life Cycle Model Management","Project Assessment and Control","Business or Mission Analysis"],k:0,w:"Project Planning produces and coordinates effective and workable plans, of which the SEMP is the principal technical one."},
+
+/* ---------- Technical processes ---------- */
+{a:"TP",c:"2.3.5.1",q:"Defining the strategic problem or opportunity, characterising the solution space and determining candidate solution classes is:",o:["Business or Mission Analysis","Stakeholder Needs and Requirements Definition","System Requirements Definition","System Analysis"],k:0,w:"Business or Mission Analysis is the first Technical process and sits in the problem space. It precedes eliciting stakeholder needs."},
+{a:"TP",c:"2.3.5.2",q:"The Stakeholder Needs and Requirements Definition process produces:",o:["Stakeholder requirements expressing the capabilities needed by users in a defined environment","A technical specification of the system solution","The system architecture description","Verification evidence against stakeholder expectations"],k:0,w:"Stakeholder requirements remain user-oriented. Transforming them into a technical view of the solution is the job of System Requirements Definition."},
+{a:"TP",c:"2.3.5.3",q:"System Requirements Definition is best described as:",o:["Transforming the stakeholder, user-oriented view into a technical view of a solution meeting operational needs","Eliciting needs from users and other stakeholders","Allocating requirements to system elements in the architecture","Confirming requirements are correctly implemented"],k:0,w:"The transformation from user-oriented to technical view is the defining phrase. Allocation to elements belongs to System Architecture Definition."},
+{a:"TP",c:"2.3.5.4",q:"The System Architecture Definition process is intended to:",o:["Generate architecture alternatives, select one or more addressing stakeholder concerns and requirements, and express these in consistent views and models","Produce detailed design data sufficient to build the system","Define interfaces between the system and its environment","Establish the physical configuration of the delivered product"],k:0,w:"Note 'alternatives' and 'views and models' — architecture is a selection among candidates expressed through viewpoints, not a single deterministic output."},
+{a:"TP",c:"2.3.5.5",q:"Design Definition differs from System Architecture Definition principally in that it:",o:["Provides sufficient detailed data and information to realise the solution consistent with requirements and architecture","Selects between competing architectural concepts","Defines the boundary of the system of interest","Establishes the stakeholder needs the design must satisfy"],k:0,w:"Architecture selects and structures; Design Definition supplies the detail needed for realisation. The architecture constrains the design, not the reverse."},
+{a:"TP",c:"2.3.5.6",q:"The System Analysis process exists to:",o:["Provide a rigorous basis of data and information for technical understanding, supporting decision-making and technical assessment across the life cycle","Decompose the system into elements for allocation","Analyse failures found during integration","Assess whether the system meets its stakeholder needs in use"],k:0,w:"System Analysis is the analytical support service to all other technical work — it runs across the life cycle rather than at a single point."},
+{a:"TP",c:"2.3.5.7",q:"The Implementation process is defined as acting to:",o:["Realise a specified system element","Combine elements into a working system","Deploy the system into its operational environment","Produce the detailed design of a system element"],k:0,w:"Implementation realises one element. Combining elements is Integration. Deploying is Transition. The three are commonly confused under everyday usage of 'build'."},
+{a:"TP",c:"2.3.5.8",q:"The Integration process synthesises system elements into a realised system that:",o:["Satisfies the system requirements","Satisfies stakeholder needs in the operational environment","Is ready for production release","Is under configuration control"],k:0,w:"Integration is framed against system requirements. Satisfaction of stakeholder needs in use is the concern of Validation."},
+{a:"TP",c:"2.3.5.9",q:"Verification provides objective evidence that:",o:["A system, element or artefact fulfils its specified requirements and characteristics","The system meets business or mission objectives when in use","The design is the most cost-effective option available","The build conforms to the released configuration"],k:0,w:"Verification asks 'did we build the system right' — against specified requirements. Note it can apply to artefacts (e.g. a requirements set or a model), not only to hardware."},
+{a:"TP",c:"2.3.5.11",q:"Validation provides objective evidence that the system, when in use:",o:["Fulfils business or mission objectives and stakeholder needs, achieving intended use in its intended environment","Conforms to its specified system requirements","Has passed all planned acceptance tests","Has been correctly transitioned into service"],k:0,w:"Validation asks 'did we build the right system' — against needs and intended use in the intended environment. The 'when in use' framing is deliberate."},
+{a:"TP",c:"2.3.5.10",q:"The Transition process establishes:",o:["A capability for the system to provide services specified by stakeholder requirements in the operational environment","That the system meets its specified requirements","The maintenance concept for the in-service system","Agreement between acquirer and supplier on delivery terms"],k:0,w:"Transition is about installing and establishing operational capability. It sits between Verification and Validation in the standard ordering."},
+{a:"TP",c:"2.3.5.12",q:"The Operation process exists to:",o:["Use the system to deliver its services","Monitor system performance against technical performance measures","Sustain the capability of the system to provide a service","Manage the operational configuration of the fielded system"],k:0,w:"Operation uses the system. Sustaining the capability is Maintenance. The two are separate processes and the exam separates them cleanly."},
+{a:"TP",c:"2.3.5.13",q:"Sustaining the capability of the system to provide a service is the purpose of:",o:["Maintenance","Operation","Support","Transition"],k:0,w:"Maintenance is a Technical process. 'Support' is a life cycle stage, not a process — a distinction worth holding onto."},
+{a:"TP",c:"2.3.5.14",q:"The Disposal process includes all of the following except:",o:["Recovering residual commercial value from the retired asset","Ending the existence of a system element or system for its specified intended use","Appropriately handling replaced or retired elements","Attending to identified critical disposal needs"],k:0,w:"Value recovery may occur but is not part of the stated purpose. Disposal is framed around ending existence for intended use, handling retired elements and waste, and meeting critical disposal needs."},
+{a:"TP",c:"2.3.5",q:"How many Technical processes are there?",o:["14","12","16","10"],k:0,w:"14 Technical processes, from Business or Mission Analysis through to Disposal. Together with 8 Technical Management, 6 Organizational Project-Enabling and 2 Agreement, this gives 30."},
+{a:"TP",c:"2.3.5.9",q:"A supplier proposes closing a requirement by analysis rather than test. Under the handbook, verification methods:",o:["Include inspection, analysis, demonstration and test, selected according to the requirement and available evidence","Must always be test where the requirement is safety-related","Are fixed by the acquirer at contract award and cannot be changed","Are determined during the Validation process"],k:0,w:"The four conventional methods are inspection, analysis, demonstration and test. Method selection is a verification planning decision driven by the nature of the requirement, risk and cost."},
+
+/* ---------- Ch3 quality characteristics ---------- */
+{a:"QC",c:"3.1.1",q:"In the fifth edition, the '-ilities' are treated under the heading of:",o:["Quality characteristics","Non-functional requirements","Specialty engineering","System attributes"],k:0,w:"The fifth edition adopts 'quality characteristics' as the umbrella term. If you learned 'specialty engineering' from the fourth edition or from defence practice, retrain the term for this exam."},
+{a:"QC",c:"3.1.8",q:"Reliability, Availability and Maintainability engineering is concerned with:",o:["The ability of the system to perform when required, for the duration required, and to be restored to service","Protection of the system against deliberate attack","The ability of the system to absorb disruption and recover functionality","Minimising life cycle environmental impact"],k:0,w:"RAM addresses performance on demand, duration and restoration. Absorbing and recovering from disruption is Resilience; protection against attack is System Security."},
+{a:"QC",c:"3.1.9",q:"Resilience engineering is best distinguished from reliability engineering because it addresses:",o:["The system's ability to anticipate, absorb, adapt to and recover from disruption, including unforeseen events","The probability of failure-free operation over a defined interval","The ease of restoring the system after a known failure mode","Compliance with safety integrity requirements"],k:0,w:"Reliability concerns known failure modes and probability of failure-free operation. Resilience extends to disruptions that were not anticipated in the failure model."},
+{a:"QC",c:"3.1.11",q:"System Safety Engineering is principally concerned with:",o:["Preventing conditions that could cause harm to people, property or the environment","Preventing unauthorised access to system functions and data","Ensuring the system remains available under load","Ensuring the system can be manufactured consistently"],k:0,w:"Safety addresses harm from the system's own behaviour and failure; Security addresses harm from deliberate hostile action. Loss-Driven SE offers a unifying frame across both."},
+{a:"QC",c:"3.1.13",q:"Loss-Driven Systems Engineering is characterised by:",o:["Framing engineering activity around identifying and preventing unacceptable losses across safety, security and mission domains","Optimising the system for minimum life cycle cost","Analysing losses incurred during integration and test","Managing the financial risk exposure of a programme"],k:0,w:"LDSE unifies safety, security and mission assurance by starting from what losses are unacceptable to stakeholders and working back to controls."},
+{a:"QC",c:"3.1.4",q:"Human Systems Integration is best described as:",o:["Integrating human considerations — capability, limitation, workload, training — into system design and life cycle","Designing user interfaces to be intuitive","Managing the project team's skills and competencies","Ensuring compliance with health and safety legislation"],k:0,w:"HSI treats the human as an element of the system across manpower, personnel, training, human factors, safety, health, habitability and survivability."},
+{a:"QC",c:"3.1.2",q:"Affordability analysis is primarily concerned with:",o:["Balancing capability against total life cycle cost within available resources over time","Reducing unit production cost","Selecting the lowest-priced compliant tender","Forecasting the programme budget profile"],k:0,w:"Affordability is a balance of capability, cost and available resource over the life cycle — not simply cost minimisation."},
+{a:"QC",c:"3.1.5",q:"Interoperability analysis addresses:",o:["The ability of the system to exchange and use information with other systems to achieve a shared outcome","The compatibility of physical connectors between elements","The portability of software across platforms","The ability to substitute suppliers without redesign"],k:0,w:"Interoperability is about joint achievement of outcomes with other systems, spanning technical, syntactic, semantic and organisational levels — not just connector fit."},
+{a:"QC",c:"3.1.3",q:"Agility engineering, as a quality characteristic, concerns:",o:["The system's ability to respond effectively to change in its environment or mission","The project's use of agile development methods","The speed of the development schedule","The reconfigurability of the manufacturing line"],k:0,w:"Distinguish agility as a property of the system from agile as a development approach (§4.2.2). The exam exploits this ambiguity."},
+{a:"QC",c:"3.1.10",q:"Sustainability engineering in the handbook addresses:",o:["Environmental, social and economic impact of the system across its life cycle","The ability to sustain system performance in service","The maintenance and logistics support concept","The long-term availability of spare parts"],k:0,w:"Sustainability is about life cycle impact across environmental, social and economic dimensions. Sustaining performance in service is Maintenance and RAM."},
+{a:"QC",c:"3.1.6",q:"Logistics engineering is chiefly concerned with:",o:["The resources, infrastructure and processes needed to support the system throughout its life","The manufacturing supply chain feeding production","The transport of the system to the customer","The disposal of the system at end of life"],k:0,w:"Logistics engineering covers the support system as a whole — spares, facilities, personnel, technical data, transport and handling."},
+{a:"QC",c:"3.1",q:"How many quality characteristics does §3.1 cover (§3.1.2 to §3.1.13)?",o:["12","8","15","6"],k:0,w:"Twelve: affordability, agility, human systems integration, interoperability, logistics, manufacturability/producibility, RAM, resilience, sustainability, system safety, system security and loss-driven SE. §3.1.1 is the introduction, not a characteristic."},
+
+/* ---------- Ch3 methods ---------- */
+{a:"AM",c:"3.2.3",q:"Traceability in the handbook's sense principally supports:",o:["Demonstrating that requirements are satisfied and assessing the impact of change","Recording the history of design decisions for audit","Linking suppliers to the components they provide","Tracking programme progress against schedule"],k:0,w:"Traceability underpins both coverage (nothing orphaned, nothing unsatisfied) and impact analysis when something changes."},
+{a:"AM",c:"3.2.4",q:"Interface management is primarily concerned with:",o:["Defining, controlling and verifying interfaces between elements and with external systems","Managing communications between project stakeholders","Selecting standard connector types","Coordinating between engineering disciplines"],k:0,w:"Definition, control and verification — with early identification and clear ownership as the critical success factors. Interfaces are where integration risk concentrates."},
+{a:"AM",c:"3.2.5",q:"An architecture framework such as TOGAF or the MODAF/NAF family provides:",o:["A structured set of viewpoints and conventions for describing an architecture to defined stakeholder concerns","A prescribed architecture that projects instantiate","A modelling language for expressing system structure and behaviour","A maturity model for assessing architecture practice"],k:0,w:"A framework organises viewpoints and conventions. SysML is a language; a framework tells you which views to produce and for whom."},
+{a:"AM",c:"3.2.2",q:"Prototyping is used in systems engineering mainly to:",o:["Reduce uncertainty about feasibility, requirements or design by building something partial and learning from it","Produce a first article for production qualification","Demonstrate the system to stakeholders for approval","Accelerate the delivery schedule"],k:0,w:"Prototyping is an uncertainty-reduction method. Demonstration to stakeholders is a possible use but not the defining purpose."},
+{a:"AM",c:"3.2.6",q:"Patterns, as an SE method, are:",o:["Reusable, generalised solutions to recurring problems in a context","Templates for producing standard engineering documentation","Recurring failure modes identified in service data","Standard architectures mandated for a given domain"],k:0,w:"Patterns capture proven solutions abstracted from specifics, so they can be reapplied where the same problem recurs in a similar context."},
+{a:"AM",c:"3.2.7",q:"Design thinking is characterised in the handbook by:",o:["An iterative, human-centred approach emphasising empathy, problem framing and rapid experimentation","A structured method for decomposing requirements into design elements","A formal technique for evaluating design alternatives against weighted criteria","A governance process for approving design decisions"],k:0,w:"Design thinking is human-centred and exploratory, aimed at framing the right problem before converging. Weighted-criteria evaluation belongs to Decision Management."},
+{a:"AM",c:"3.2.8",q:"Biomimicry applied to systems engineering means:",o:["Drawing on strategies observed in biological systems to inform engineered solutions","Designing systems that interface safely with human physiology","Using genetic algorithms to optimise design parameters","Modelling system behaviour using population dynamics"],k:0,w:"Biomimicry looks to nature's proven strategies as a source of design inspiration. Genetic algorithms are an optimisation technique, not biomimicry in this sense."},
+{a:"AM",c:"3.2.1",q:"Modelling, analysis and simulation are grouped together in §3.2 because they:",o:["Provide abstracted representations used to reason about a system that cannot be fully examined directly","Are the three activities that constitute MBSE","Replace the need for physical testing in modern programmes","Are mandated by ISO/IEC/IEEE 15288"],k:0,w:"They are abstraction techniques for reasoning about systems. MBSE (§4.2.1) is a methodology choice, broader than these three activities."},
+
+/* ---------- Ch4 tailoring ---------- */
+{a:"TAI",c:"4.1",q:"Tailoring in the handbook's sense means:",o:["Adapting processes and their application to fit the project's context, scale and risk","Reducing the number of processes applied in order to save cost","Modifying requirements to suit the chosen solution","Customising a COTS product to a customer's needs"],k:0,w:"Tailoring adapts process application to context. Cost saving may follow but is not the definition, and tailoring can equally mean adding rigour where risk demands it."},
+{a:"TAI",c:"4.2.1",q:"Model-Based Systems Engineering is best described as:",o:["The formalised application of modelling to support system requirements, design, analysis, verification and validation across the life cycle","The use of SysML to document system architecture","A replacement for document-based specifications","A simulation-led approach to system verification"],k:0,w:"MBSE is formalised modelling across the life cycle, from concept through to disposal. SysML is one language that can support it — the tool is not the methodology."},
+{a:"TAI",c:"4.2.2",q:"Agile systems engineering is chiefly motivated by:",o:["Responding effectively to change and delivering value incrementally under uncertainty","Reducing documentation to accelerate delivery","Eliminating up-front architecture work","Applying software development practices to hardware programmes"],k:0,w:"Agile SE responds to change and delivers value incrementally. The handbook is explicit that architecture and SE rigour are not discarded — they are applied differently."},
+{a:"TAI",c:"4.2.3",q:"Lean systems engineering focuses primarily on:",o:["Maximising value delivered while eliminating waste in the engineering process","Minimising the headcount on engineering teams","Reducing the physical mass and cost of the product","Standardising processes across the organisation"],k:0,w:"Lean is a value-and-waste frame applied to the engineering process itself. It is not a cost-cutting or headcount measure."},
+{a:"TAI",c:"4.2.4",q:"Product Line Engineering is characterised by:",o:["Managing a shared set of core assets with planned variation to produce a family of related products","Sequencing multiple products through a shared production line","Reusing components opportunistically between projects","Offering customers configurable options at point of sale"],k:0,w:"PLE relies on planned, managed variation over shared core assets. Opportunistic reuse is precisely what PLE replaces with a systematic approach."},
+{a:"TAI",c:"4.3.2",q:"A brownfield or legacy system context is distinguished by:",o:["Constraints imposed by existing systems, interfaces and infrastructure that must be accommodated","The need to comply with environmental remediation requirements","The absence of an existing operational concept","The use of obsolete components in the design"],k:0,w:"Brownfield means designing within an installed base. Greenfield or clean sheet means the constraints of an existing environment are largely absent."},
+{a:"TAI",c:"4.3.6",q:"A system of systems whose constituent systems retain independent management and objectives but where a central authority coordinates toward a shared purpose is:",o:["Acknowledged","Directed","Collaborative","Virtual"],k:0,w:"Four types: directed (built and managed centrally for a purpose), acknowledged (recognised objectives and authority, but constituents retain independence), collaborative (voluntary cooperation, no central authority), virtual (no central authority or agreed purpose)."},
+{a:"TAI",c:"4.3.6",q:"A system of systems with no central management authority and no agreed central purpose is:",o:["Virtual","Collaborative","Acknowledged","Directed"],k:0,w:"Virtual sits at the loosest end of the spectrum, with emergent behaviour arising without any coordinating authority."},
+{a:"TAI",c:"4.3.5",q:"Cyber-physical systems are distinguished by:",o:["Tight integration of computation and networking with physical processes, with feedback between them","The use of embedded software in physical products","Connection of physical assets to the internet","Reliance on cyber security controls to protect physical function"],k:0,w:"The defining feature is the feedback coupling between computational and physical processes, not merely the presence of software or connectivity."},
+{a:"TAI",c:"4.3.3",q:"The principal systems engineering challenge with COTS-based systems is:",o:["The solution constrains the requirements, since the product's capability and evolution are outside the project's control","Ensuring the supplier meets quality standards","Integrating multiple vendors' products into one architecture","Achieving cost savings against bespoke development"],k:0,w:"With COTS the trade runs backwards: requirements must flex to what the market offers, and the product roadmap is controlled by someone else."},
+{a:"TAI",c:"4.3.9",q:"Enterprise systems, in the handbook's taxonomy, are characterised by:",o:["Spanning organisational, human and process elements as well as technology, in pursuit of business goals","Being the largest systems an organisation operates","Integrating all of an organisation's IT systems","Being managed at board level rather than project level"],k:0,w:"Enterprise systems include people, processes and organisational structures as engineered elements, not just technology at scale."},
+
+/* ---------- Ch5/6 practice ---------- */
+{a:"PRA",c:"5.1.1",q:"In distinguishing hard from soft skills, the handbook's position is that:",o:["Both are required, and soft skills are frequently the differentiator in effective systems engineering practice","Hard technical skills are the primary determinant of SE effectiveness","Soft skills are the province of project management rather than SE","Soft skills cannot meaningfully be assessed or developed"],k:0,w:"The handbook treats soft skills — communication, influence, leadership — as essential to the discipline, not peripheral to it."},
+{a:"PRA",c:"5.3.3",q:"The relationship between systems engineering and project management is best characterised as:",o:["Complementary and overlapping, requiring close coordination on planning, risk and measurement","Hierarchical, with SE reporting to and directed by PM","Independent, with clearly separated concerns","Identical in scope but differing in terminology"],k:0,w:"SE and PM overlap substantially — planning, risk, measurement, decision-making — and the handbook stresses coordination rather than boundary policing."},
+{a:"PRA",c:"5.4",q:"Digital engineering is best described as:",o:["An integrated, model- and data-centric approach to engineering across the life cycle and across disciplines","The digitisation of engineering documentation","The application of MBSE tools to system architecture","The use of digital twins in operations and support"],k:0,w:"Digital engineering is broader than MBSE: it is an authoritative-source-of-truth, data-centric transformation spanning disciplines and the full life cycle."},
+{a:"PRA",c:"5.1.4",q:"Regarding ethics, the handbook's position is that systems engineers:",o:["Hold responsibilities to the public and to stakeholders that may exceed contractual obligation","Should defer ethical judgements to the organisation's compliance function","Are bound solely by the terms of their engagement","Face ethical questions only in safety-critical domains"],k:0,w:"Professional responsibility extends beyond contract — consistent with the codes of conduct of professional engineering institutions."},
+{a:"PRA",c:"5.2",q:"The handbook's treatment of diversity, equity and inclusion links it to engineering outcomes because:",o:["Diverse teams reduce susceptibility to shared cognitive bias and broaden the range of considered solutions","It is a regulatory requirement in most engineering jurisdictions","It improves recruitment and retention of engineering staff","It is required for certification under ISO/IEC/IEEE 15288"],k:0,w:"The handbook explicitly connects DEI back to the cognitive bias discussion in §1.4.2 — it is framed as an engineering-quality argument, not only an ethical one."},
+
+/* ---------- discriminating / trap items ---------- */
+{a:"TP",c:"2.3.5.9",q:"Your organisation runs 'validation' before 'verification' because that is how the customer's contract is worded. On the exam you should answer that:",o:["Verification confirms conformance to specified requirements and Validation confirms fitness for intended use, regardless of local convention","Sequencing depends on the contract and either order may be correct","Validation always precedes Verification in ISO/IEC/IEEE 15288","The two terms are interchangeable in the fifth edition"],k:0,w:"The handbook's definitions are the answer key, even where your programme, customer or sector uses the terms differently. This is the single most common source of experienced-practitioner errors."},
+{a:"OPE",c:"2.3.3.5",q:"Which pair correctly assigns process to group?",o:["Quality Management is Organizational Project-Enabling; Quality Assurance is Technical Management","Both are Technical Management processes","Quality Management is Technical Management; Quality Assurance is Organizational Project-Enabling","Both are Organizational Project-Enabling processes"],k:0,w:"Organisation-level Quality Management sets the system; project-level Quality Assurance applies it. Learn this pair as a unit."},
+{a:"TMP",c:"2.3.4.6",q:"Which pair correctly assigns process to group?",o:["Information Management is Technical Management; Knowledge Management is Organizational Project-Enabling","Both are Technical Management processes","Information Management is Organizational Project-Enabling; Knowledge Management is Technical Management","Both are Organizational Project-Enabling processes"],k:0,w:"Another mirrored pair split across groups. Information is project-level and item-focused; Knowledge is organisation-level and reuse-focused."},
+{a:"LC",c:"2.3.1",q:"Which of these is NOT one of the four process groups?",o:["Life Cycle Management processes","Agreement processes","Technical Management processes","Organizational Project-Enabling processes"],k:0,w:"The four groups are Agreement, Organizational Project-Enabling, Technical Management and Technical. 'Life Cycle Model Management' is a single process within Organizational Project-Enabling — a plausible-sounding distractor."},
+{a:"TP",c:"2.3.5.4",q:"An architecture description contains several views addressing different stakeholder concerns. Each view is governed by:",o:["A viewpoint, which specifies the conventions for constructing and interpreting that view","A framework, which mandates the content of the view","A model, from which the view is generated","A baseline, which fixes the view at a point in time"],k:0,w:"Viewpoint is the specification; view is the instance. The relationship comes from ISO/IEC/IEEE 42010 and is examinable in the architecture material."},
+{a:"TMP",c:"2.3.4.4",q:"A risk register entry records a 20% chance of a supplier delivering three months early, enabling an earlier trial. Under the handbook this is:",o:["An opportunity, managed within the Risk Management process","Outside the scope of Risk Management, which addresses threats only","A schedule assumption rather than a risk","An issue, since the probability is quantified"],k:0,w:"Risk Management in the fifth edition explicitly covers opportunities alongside threats. Treating risk as downside-only is a legacy habit the exam penalises."},
+{a:"LC",c:"2.1.3",q:"A decision gate differs from a technical review in that a decision gate:",o:["Authorises progression, commitment of resource, or termination, and may incorporate a technical review","Is conducted only by the acquirer","Assesses technical progress against agreed criteria","Requires an independent chair"],k:0,w:"Gates are decision points about continuing; reviews are technical assessments. A review may inform or be embedded within a gate, but the two are not synonyms."},
+{a:"TP",c:"2.3.5.2",q:"Stakeholder needs and stakeholder requirements differ because requirements:",o:["Are the formalised, agreed and verifiable expression of needs, whereas needs are the raw expressions of what is wanted","Are produced by the acquirer while needs are produced by users","Address the solution while needs address the problem","Are always documented while needs are always tacit"],k:0,w:"Needs are elicited and often informal; requirements are transformed into agreed, well-formed, verifiable statements. The transformation is the substance of the process."},
+{a:"AM",c:"3.2.3",q:"Bidirectional traceability between system requirements and stakeholder requirements primarily allows you to demonstrate:",o:["That every stakeholder requirement is addressed and that no system requirement lacks justification","That the design satisfies the requirements","That requirements have been baselined under configuration control","That verification methods have been assigned to each requirement"],k:0,w:"Upward traceability catches orphans (unjustified requirements); downward traceability catches gaps (unaddressed needs). Both directions are needed for the coverage argument."},
+{a:"TP",c:"2.3.5.6",q:"A trade study comparing three cooling architectures on weight, cost and thermal margin is executed under:",o:["Decision Management, drawing on System Analysis for the supporting data","System Analysis alone","System Architecture Definition alone","Project Assessment and Control"],k:0,w:"Decision Management provides the structured evaluation framework; System Analysis provides the rigorous data underpinning it. Trade studies typically involve both."}
+];
+
+/* ================= STATE ================= */
+function hash(s){let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return "q"+(x>>>0).toString(36);}
+Q.forEach(q=>q.id=hash(q.q));
+const LS="asep.drill.v2";
+const def=()=>({items:{},area:{},sets:[],recall:[],plan:{},readyAt:null});
+let S;
+try{S=Object.assign(def(),JSON.parse(localStorage.getItem(LS)||"{}"));}catch(e){S=def();}
+function save(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){} badge();}
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function mmss(s){s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");}
+function dstr(t){return new Date(t).toLocaleDateString("en-GB",{day:"numeric",month:"short"});}
+function pct(r,n){return n?Math.round(r/n*100):0;}
+
+function record(q,ok){
+  const it=S.items[q.id]||{n:0,r:0,st:0,lw:false};
+  it.n++; if(ok){it.r++;it.st++;it.lw=false;}else{it.st=0;it.lw=true;}
+  S.items[q.id]=it;
+  const a=S.area[q.a]||[]; a.push(ok?1:0); while(a.length>20)a.shift(); S.area[q.a]=a;
+}
+function areaStats(){
+  return Object.keys(AREAS).map(k=>{const a=(S.area[k]||[]).slice(-10);const r=a.reduce((x,y)=>x+y,0);return{k,n:a.length,acc:a.length?r/a.length:0,total:(S.area[k]||[]).length};});
+}
+function procCoverage(){
+  return PROCS.map(p=>{
+    const its=Q.filter(q=>q.c===p.c).map(q=>S.items[q.id]).filter(Boolean);
+    let st="";
+    if(its.some(i=>i.r>0))st="hit"; else if(its.length)st="miss";
+    return {p,st};
+  });
+}
+function readiness(){
+  const full=S.recall.filter(r=>r.full);
+  const best=full.length?Math.min(...full.map(r=>r.secs)):null;
+  const c1=best!==null&&best<=360;
+  const big=S.sets.filter(s=>s.n>=25), last2=big.slice(-2);
+  const c2=last2.length===2&&last2.every(s=>s.r/s.n>=.8);
+  const as=areaStats();
+  const weak=as.filter(s=>!(s.n>=3&&s.acc>=.7));
+  const c3=weak.length===0;
+  const cov=procCoverage(), hits=cov.filter(c=>c.st==="hit").length;
+  const c4=hits===30;
+  const left=[c1,c2,c3,c4].filter(x=>!x).length;
+  return {c1,c2,c3,c4,best,last2,weak,hits,left,all:left===0};
+}
+function badge(){
+  try{
+    if(!("setAppBadge" in navigator))return;
+    const r=readiness(); if(r.left)navigator.setAppBadge(r.left); else navigator.clearAppBadge();
+  }catch(e){}
+}
+function checkReady(){
+  const r=readiness();
+  if(r.all&&!S.readyAt){S.readyAt=Date.now();save();return true;}
+  return false;
+}
+
+/* ================= ROUTER ================= */
+const main=document.getElementById("main");
+const tabs=[...document.querySelectorAll(".tab")];
+let TAB="today";
+function go(t){
+  TAB=t;
+  tabs.forEach(b=>{if(b.dataset.t===t)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
+  ({today:rToday,drill:rDrill,recall:rRecall,learn:rLearn,progress:rProgress})[t]();
+  window.scrollTo(0,0);
+}
+tabs.forEach(b=>b.addEventListener("click",()=>go(b.dataset.t)));
+
+/* ================= READINESS COMPONENT ================= */
+function readyHTML(){
+  const r=readiness();
+  const row=(ok,txt,val)=>`<div class="crit${ok?" ok":""}"><div class="box" aria-hidden="true"></div><div>${txt}</div><div class="val">${val}</div></div>`;
+  const s2=r.last2.length?r.last2.map(s=>pct(s.r,s.n)+"%").join(" · "):"—";
+  return `${S.readyAt?`<div class="go-banner"><b>Ready to book</b><p>All four readiness checks met on ${dstr(S.readyAt)}. Book the online-proctored exam, keep doing one short Weak-spots set a day until you sit it.</p></div>`:""}
+  <div class="ready-card">
+    <div class="eyebrow mono">Readiness · ${4-r.left}/4 met</div>
+    ${row(r.c1,"Recall all 30 processes in the right groups in 6:00 or less",r.best!==null?mmss(r.best):"—")}
+    ${row(r.c2,"Last two sets of 25+ items both at 80% or more",s2)}
+    ${row(r.c3,"Every area at 70%+ over its last 10 attempts",r.weak.length?r.weak.length+" short":"all")}
+    ${row(r.c4,"Every one of the 30 processes answered correctly at least once",r.hits+"/30")}
+  </div>`;
+}
+
+/* ================= TODAY ================= */
+function rToday(){
+  const done=PLAN.filter(d=>S.plan[d.d]).length;
+  const next=PLAN.find(d=>!S.plan[d.d]);
+  const fi=Math.floor(Date.now()/864e5)%FACTS.length;
+  main.innerHTML=`
+    <h2>Today</h2>
+    ${readyHTML()}
+    <div class="card fact"><div class="eyebrow mono">Fact of the day</div><p style="margin:0">${FACTS[fi]}</p></div>
+    <div class="row" style="margin:0 0 6px">
+      <button class="btn" id="qWeak">Weak spots · 15</button>
+      <button class="btn ghost" id="qRecall">Recall sprint</button>
+    </div>
+    <div class="eyebrow mono">7-day plan · ${done}/7 done${next?" · next: day "+next.d:""}</div>
+    <div>${PLAN.map(d=>`
+      <div class="day${S.plan[d.d]?" done":""}">
+        <button class="daychk" data-d="${d.d}" aria-pressed="${!!S.plan[d.d]}" aria-label="Mark day ${d.d} done">${S.plan[d.d]?"✓":d.d}</button>
+        <div>
+          <h3>${d.t} <span class="mono muted small" style="font-weight:400">· ${d.h}</span></h3>
+          <div class="cl">${d.cl}</div>
+          <p>${d.p}</p>
+          <div class="exit"><b class="mono small muted">Exit · </b>${d.x}</div>
+        </div>
+      </div>`).join("")}
+    </div>
+    <p class="small muted" style="margin-top:14px;line-height:1.5">If you're below 70% on mixed sets by day 5, move the exam date rather than pushing the pace.</p>`;
+  main.querySelectorAll(".daychk").forEach(b=>b.addEventListener("click",()=>{const d=+b.dataset.d;S.plan[d]=!S.plan[d];save();rToday();}));
+  document.getElementById("qWeak").addEventListener("click",()=>{go("drill");startDrill("weak");});
+  document.getElementById("qRecall").addEventListener("click",()=>go("recall"));
+}
+
+/* ================= DRILL ================= */
+let D={active:false};
+let mixSel=new Set(Object.keys(AREAS)), mixN=25;
+
+function rDrill(){
+  if(D.active)return D.done?rDrillResult():rQuestion();
+  const misses=Q.filter(q=>S.items[q.id]&&S.items[q.id].lw).length;
+  main.innerHTML=`
+    <h2>Drill</h2>
+    <button class="mode" id="mWeak"><b>Weak spots</b><span>15 items, prioritising your misses, then unseen items, then your weakest areas.</span></button>
+    <button class="mode" id="mMiss" ${misses?"":"disabled"}><b>Review misses · ${misses}</b><span>Only the items you got wrong last time you saw them.</span></button>
+    <button class="mode" id="mMock"><b>Mock exam</b><span>50 items, 60 minutes, exam pace. No feedback until the end. Counts toward readiness.</span></button>
+    <div class="card" style="margin-top:4px">
+      <b style="font-family:var(--disp);font-size:17px">Mixed set</b>
+      <div class="chips">${Object.entries(AREAS).map(([k,v])=>`<button class="chip" data-a="${k}" aria-pressed="${mixSel.has(k)}">${v}</button>`).join("")}</div>
+      <div class="chips">${[12,25,0].map(n=>`<button class="chip" data-n="${n}" aria-pressed="${mixN===n}">${n?n+" items":"All"}</button>`).join("")}</div>
+      <button class="btn full" id="mMix" style="margin-top:8px">Start mixed set</button>
+    </div>
+    <p class="small muted">${Q.length} items, all original and written against the SEH 5th Ed structure. Not INCOSE material. Each one is stamped with the clause to re-read if you miss it.</p>`;
+  main.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.a;if(mixSel.has(k)&&mixSel.size>1)mixSel.delete(k);else mixSel.add(k);b.setAttribute("aria-pressed",mixSel.has(k));}));
+  main.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{mixN=+b.dataset.n;main.querySelectorAll("[data-n]").forEach(x=>x.setAttribute("aria-pressed",x===b));}));
+  document.getElementById("mWeak").addEventListener("click",()=>startDrill("weak"));
+  document.getElementById("mMiss").addEventListener("click",()=>startDrill("misses"));
+  document.getElementById("mMock").addEventListener("click",()=>startDrill("mock"));
+  document.getElementById("mMix").addEventListener("click",()=>startDrill("mixed"));
+}
+
+function pickWeak(n){
+  const as={};areaStats().forEach(s=>as[s.k]=s.n?s.acc:.5);
+  const scored=shuffle(Q).map(q=>{const it=S.items[q.id];let sc;
+    if(it&&it.lw)sc=0; else if(!it)sc=1; else sc=2+Math.min(it.st,3);
+    sc+=as[q.a]; return {q,sc};});
+  scored.sort((a,b)=>a.sc-b.sc);
+  return scored.slice(0,n).map(x=>x.q);
+}
+function startDrill(mode){
+  let set;
+  if(mode==="weak")set=pickWeak(15);
+  else if(mode==="misses")set=shuffle(Q.filter(q=>S.items[q.id]&&S.items[q.id].lw));
+  else if(mode==="mock")set=shuffle(Q).slice(0,50);
+  else {const pool=shuffle(Q.filter(q=>mixSel.has(q.a)));set=mixN?pool.slice(0,mixN):pool;}
+  if(!set.length)return;
+  set=set.map(q=>({q,opts:shuffle(q.o.map((t,i)=>({t,ok:i===q.k})))}));
+  D={active:true,mode,set,i:0,r:0,log:[],answered:false,done:false};
+  if(mode==="mock"){D.t0=Date.now();D.limit=3600;clearInterval(D.tick);D.tick=setInterval(mockTick,1000);}
+  rQuestion();
+}
+function mockTick(){
+  if(!D.active||D.mode!=="mock"||D.done){clearInterval(D.tick);return;}
+  const left=D.limit-(Date.now()-D.t0)/1000;
+  const el=document.getElementById("mockT"); if(el)el.textContent=mmss(left);
+  if(left<=0){endDrill(true);}
+}
+function rQuestion(){
+  if(TAB!=="drill")return;
+  const it=D.set[D.i], q=it.q, mock=D.mode==="mock";
+  main.innerHTML=`
+    <div class="qmeta">
+      <div class="qid"><span class="tag">${q.a}</span>§${q.c}</div>
+      <div class="qid">${D.i+1}/${D.set.length}${mock?` · <span id="mockT">${mmss(D.limit-(Date.now()-D.t0)/1000)}</span>`:` · ${D.r} correct`}</div>
+    </div>
+    <div class="progressbar"><i style="width:${D.i/D.set.length*100}%"></i></div>
+    <p class="qtext">${q.q}</p>
+    <div>${it.opts.map((o,j)=>`<button class="opt" data-j="${j}"><span class="lt">${"ABCD"[j]}</span><span>${o.t}</span></button>`).join("")}</div>
+    <div id="fb"></div>
+    <div class="row" id="nav"><button class="btn ghost" id="quit">End set</button></div>`;
+  D.answered=false;
+  main.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>pick(+b.dataset.j)));
+  document.getElementById("quit").addEventListener("click",()=>endDrill(false));
+}
+function pick(j){
+  if(D.answered)return; D.answered=true;
+  const it=D.set[D.i], ok=it.opts[j].ok;
+  if(ok)D.r++;
+  record(it.q,ok); D.log.push({it,ok,j}); save();
+  if(D.mode==="mock"){D.i++; if(D.i>=D.set.length)endDrill(); else rQuestion(); return;}
+  main.querySelectorAll(".opt").forEach((b,k)=>{b.disabled=true;if(it.opts[k].ok)b.classList.add("correct");else if(k===j)b.classList.add("wrong");});
+  document.getElementById("fb").innerHTML=`<div class="why"><b>${ok?"Correct":"Not this one"} · re-read §${it.q.c}</b>${it.q.w}</div>`;
+  const last=D.i+1>=D.set.length;
+  document.getElementById("nav").innerHTML=`<button class="btn" id="next">${last?"See results":"Next"}</button>`;
+  const nx=document.getElementById("next"); nx.focus({preventScroll:true});
+  nx.addEventListener("click",()=>{D.i++; if(D.i>=D.set.length)endDrill(); else {rQuestion();window.scrollTo(0,0);}});
+}
+function endDrill(timeout){
+  if(D.done)return;
+  clearInterval(D.tick);
+  const n=(D.mode==="mock"&&timeout===true)?D.set.length:D.log.length;
+  D.timeout=timeout===true;
+  if(n>0){S.sets.push({d:Date.now(),mode:D.mode,n,r:D.r}); while(S.sets.length>40)S.sets.shift(); save();}
+  D.done=true; D.total=n;
+  D.became=checkReady();
+  if(TAB==="drill")rDrillResult();
+}
+function rDrillResult(){
+  const n=D.total, p=pct(D.r,n);
+  const verdict=!n?"No items answered":p>=80?"Exam pace — keep it there":p>=65?"Close — work the misses below":"Not yet — re-read the stamped clauses";
+  const by={};D.log.forEach(l=>{const a=l.it.q.a;by[a]=by[a]||{n:0,r:0};by[a].n++;if(l.ok)by[a].r++;});
+  const wrong=D.log.filter(l=>!l.ok);
+  const unanswered=D.timeout?D.set.length-D.log.length:0;
+  main.innerHTML=`
+    ${D.became?`<div class="go-banner"><b>Ready to book</b><p>That set lit the last readiness check. Book the online-proctored exam.</p></div>`:""}
+    <h2>${D.mode==="mock"?"Mock result":"Set result"}</h2>
+    <div class="big">${p}<span style="font-size:26px">%</span></div>
+    <div class="verdict">${D.r}/${n} · ${verdict}</div>
+    ${unanswered?`<p class="small muted" style="text-align:center">${unanswered} unanswered when time ran out — counted as wrong.</p>`:""}
+    ${n<25&&D.mode!=="mock"?`<p class="small muted" style="text-align:center">Sets under 25 items don't count toward the 80% readiness check.</p>`:""}
+    <div class="eyebrow mono">By area, weakest first</div>
+    ${Object.entries(by).sort((a,b)=>a[1].r/a[1].n-b[1].r/b[1].n).map(([k,v])=>`<div class="kv"><span>${AREAS[k]}</span><span>${v.r}/${v.n} · ${pct(v.r,v.n)}%</span></div>`).join("")}
+    ${wrong.length?`<div class="eyebrow mono">What you missed</div>${wrong.map(l=>`<div class="miss"><div>${l.it.q.q}</div><div class="a" style="margin-top:4px">${l.it.opts.find(o=>o.ok).t}</div><div class="muted small" style="margin-top:4px">§${l.it.q.c} · ${l.it.q.w}</div></div>`).join("")}`:""}
+    <div class="row"><button class="btn" id="again">New set</button><button class="btn ghost" id="toToday">Readiness</button></div>`;
+  document.getElementById("again").addEventListener("click",()=>{D={active:false};rDrill();});
+  document.getElementById("toToday").addEventListener("click",()=>{D={active:false};go("today");});
+}
+
+/* ================= RECALL SPRINT ================= */
+let R={active:false};
+function norm(s){return s.toLowerCase().replace(/&/g," and ").replace(/\bmgmt\b|\bmgt\b/g,"management").replace(/[^a-z ]/g," ").replace(/\s+/g," ").trim();}
+function matchProc(s){const n=norm(s);if(!n)return null;for(const id of MATCH_ORDER){if(PI[id].rx.test(n))return PI[id];}return null;}
+
+function rRecall(){
+  if(R.active)return rRecallActive();
+  if(R.done)return rRecallDone();
+  const att=S.recall.slice(-5).reverse();
+  const full=S.recall.filter(r=>r.full), best=full.length?Math.min(...full.map(r=>r.secs)):null;
+  main.innerHTML=`
+    <h2>Recall sprint</h2>
+    <div class="card">
+      <p style="margin:0">Name all 30 life cycle processes from memory, in the right groups. Tap a group, type a process, press return. Short forms work — "config", "QA", "stakeholder".</p>
+      <p>Target: <b>30/30 in 6:00</b>. A name typed under the wrong group counts as an error and isn't placed.</p>
+    </div>
+    <div class="kv"><span>Best full recall</span><span>${best!==null?mmss(best):"—"}</span></div>
+    <div class="kv"><span>Attempts</span><span>${S.recall.length}</span></div>
+    ${att.length?`<div class="eyebrow mono">Recent</div>${att.map(a=>`<div class="kv"><span>${dstr(a.d)}</span><span>${a.n}/30 · ${mmss(a.secs)} · ${a.errs} err</span></div>`).join("")}`:""}
+    <div class="row"><button class="btn full" id="rgo">Start the clock</button></div>
+    <p class="small muted">Not ready to test yourself? The full list with one-line purposes is under Learn → The 30 processes.</p>`;
+  document.getElementById("rgo").addEventListener("click",startRecall);
+}
+function startRecall(){
+  R={active:true,t0:Date.now(),found:{},errs:0,g:"AGR",msg:"",cls:""};
+  clearInterval(R.tick); R.tick=setInterval(recallTick,500);
+  rRecallActive();
+  const inp=document.getElementById("rin"); if(inp)inp.focus();
+}
+function recallTick(){
+  if(!R.active){clearInterval(R.tick);return;}
+  const el=document.getElementById("rt"); if(!el)return;
+  const s=(Date.now()-R.t0)/1000; el.textContent=mmss(s); el.classList.toggle("over",s>360);
+}
+function rRecallActive(){
+  if(TAB!=="recall")return;
+  const s=(Date.now()-R.t0)/1000;
+  const count=g=>PROCS.filter(p=>p.g===g&&R.found[p.id]).length;
+  const total=Object.keys(R.found).length;
+  main.innerHTML=`
+    <div class="timer${s>360?" over":""}" id="rt">${mmss(s)}</div>
+    <div class="target">target 06:00 · ${total}/30 · ${R.errs} err</div>
+    <div class="groups">${GROUPS.map(g=>{const tot=PROCS.filter(p=>p.g===g.k).length;
+      return `<button class="grp" data-g="${g.k}" aria-pressed="${R.g===g.k}"><b>${g.n}</b><span>${count(g.k)}/${tot}</span></button>`;}).join("")}</div>
+    <div class="entry">
+      <input id="rin" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Process in ${esc(GROUPS.find(g=>g.k===R.g).n)}" aria-label="Process name">
+      <button class="btn" id="radd">Add</button>
+    </div>
+    <div class="fb ${R.cls}" id="rfb" role="status">${R.msg}</div>
+    <div class="found">${GROUPS.map(g=>{const f=PROCS.filter(p=>p.g===g.k&&R.found[p.id]);return f.length?`<div class="gl">${g.n}</div>${f.map(p=>`<span class="pill">${p.name}</span>`).join("")}`:"";}).join("")}</div>
+    <div class="row"><button class="btn ghost" id="rend">Finish</button></div>`;
+  main.querySelectorAll(".grp").forEach(b=>b.addEventListener("click",()=>{R.g=b.dataset.g;R.msg="";rRecallActive();document.getElementById("rin").focus();}));
+  const inp=document.getElementById("rin");
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addRecall();}});
+  document.getElementById("radd").addEventListener("click",addRecall);
+  document.getElementById("rend").addEventListener("click",endRecall);
+}
+function addRecall(){
+  const inp=document.getElementById("rin"); const v=inp.value; if(!v.trim())return;
+  const p=matchProc(v);
+  if(!p){R.msg=`No match for "${esc(v)}" — be more specific`;R.cls="bad";}
+  else if(R.found[p.id]){R.msg=`${p.name} already listed`;R.cls="";}
+  else if(p.g!==R.g){R.errs++;R.msg=`Not in ${GROUPS.find(g=>g.k===R.g).n}`;R.cls="bad";}
+  else {R.found[p.id]=1;R.msg=`✓ ${p.name}`;R.cls="ok";}
+  if(Object.keys(R.found).length===30)return endRecall();
+  rRecallActive();
+  const ni=document.getElementById("rin"); ni.value=""; ni.focus();
+}
+function endRecall(){
+  clearInterval(R.tick);
+  const secs=(Date.now()-R.t0)/1000, n=Object.keys(R.found).length;
+  S.recall.push({d:Date.now(),secs:Math.round(secs),n,errs:R.errs,full:n===30}); while(S.recall.length>50)S.recall.shift();
+  save();
+  R={active:false,done:true,secs,n,errs:R.errs,found:R.found,became:checkReady()};
+  rRecallDone();
+}
+function rRecallDone(){
+  const hit=R.n===30&&R.secs<=360;
+  main.innerHTML=`
+    ${R.became?`<div class="go-banner"><b>Ready to book</b><p>That sprint lit the last readiness check.</p></div>`:""}
+    <h2>Sprint result</h2>
+    <div class="big">${R.n}<span style="font-size:26px">/30</span></div>
+    <div class="verdict">${mmss(R.secs)} · ${R.errs} wrong-group · ${hit?"target met":R.n===30?"all found — now get it under 6:00":"not yet"}</div>
+    ${R.n<30?`<div class="eyebrow mono">Missing</div>${GROUPS.map(g=>{const m=PROCS.filter(p=>p.g===g.k&&!R.found[p.id]);return m.length?`<div class="gl mono small muted" style="margin:10px 0 4px">${g.n}</div>${m.map(p=>`<span class="pill missing">${p.name}</span>`).join("")}`:"";}).join("")}`:""}
+    <div class="row"><button class="btn" id="ragain">Go again</button><button class="btn ghost" id="rback">Back</button></div>`;
+  document.getElementById("ragain").addEventListener("click",()=>{R={active:false};startRecall();});
+  document.getElementById("rback").addEventListener("click",()=>{R={active:false};rRecall();});
+}
+
+/* ================= LEARN ================= */
+function rLearn(){
+  const procList=GROUPS.map(g=>`<h4>${g.n} · §${g.c}</h4>${PROCS.filter(p=>p.g===g.k).map(p=>`<div class="pr"><span class="c">${p.c}</span><span><b>${p.name}</b> — ${p.purpose}</span></div>`).join("")}`).join("");
+  const sec=(t,b,open)=>`<details${open?" open":""}><summary>${t}</summary><div class="lbody">${b}</div></details>`;
+  main.innerHTML=`<h2>Learn</h2>
+  ${sec("Exam facts and technique",`
+    <ul>
+      <li>100 multiple-choice questions, 120 minutes — about 72 seconds each.</li>
+      <li>Online with a remote proctor, or on paper at INCOSE events.</li>
+      <li>Content is solely the SE Handbook 5th Ed (since 15 March 2025).</li>
+      <li>Learning objectives are pitched at awareness level and cover Parts 1–5. Chapter 6 case studies are not listed.</li>
+      <li>INCOSE sells an official 10-question practice test for $10. Take it once early to calibrate the question style.</li>
+    </ul>
+    <h4>Technique</h4>
+    <ul>
+      <li>The handbook's wording is the answer key, even where your programme or customer uses terms differently.</li>
+      <li>Watch qualifiers: best, first, primary, most.</li>
+      <li>Two options often differ by one word — "specified requirements" vs "stakeholder needs" is the V&amp;V tell.</li>
+      <li>Eliminate, pick, flag, move on. Don't spend three minutes on one item.</li>
+    </ul>`,true)}
+  ${sec("The 30 processes",procList)}
+  ${sec("Reviews, audits, baselines",`
+    <div class="pr"><span class="c">Functional</span><span>ASR → <b>SRR</b> → SFR</span></div>
+    <div class="pr"><span class="c">Allocated</span><span><b>PDR</b></span></div>
+    <div class="pr"><span class="c">Product (initial)</span><span><b>CDR</b></span></div>
+    <div class="pr"><span class="c">Product (final)</span><span>TRR → SVR/FCA → PRR → <b>PCA</b></span></div>
+    <p>FCA and PCA are <b>audits</b>; the rest are <b>reviews</b>. Reviews should be event- or risk-driven, not schedule-driven. The set of reviews is planned in the SEMP and tailored to the project.</p>
+    <h4>Gates</h4>
+    <p style="margin:0">Entry gate: criteria met, resources available. Exit gate: stage objectives achieved, forward risk acceptable. A gate is a decision; a review is a technical assessment that may feed it.</p>`)}
+  ${sec("Trap pairs",`
+    <ul>
+      <li><b>Quality Management</b> (org) vs <b>Quality Assurance</b> (tech mgmt)</li>
+      <li><b>Knowledge Management</b> (org) vs <b>Information Management</b> (tech mgmt)</li>
+      <li><b>Implementation</b> (one element) / <b>Integration</b> (combine) / <b>Transition</b> (field)</li>
+      <li><b>Operation</b> (use) vs <b>Maintenance</b> (sustain); "Support" is a stage, not a process</li>
+      <li><b>Verification</b> (specified requirements) vs <b>Validation</b> (needs, in use, intended environment)</li>
+      <li><b>Recursion</b> (across levels) vs <b>iteration</b> (same level) vs <b>concurrency</b> (at the same time)</li>
+      <li><b>Agility</b> (system property, §3.1.3) vs <b>agile</b> (method, §4.2.2)</li>
+      <li><b>Measurement</b> supplies data; <b>Project Assessment and Control</b> uses it</li>
+      <li><b>Decision Management</b> frames a trade study; <b>System Analysis</b> feeds it data</li>
+      <li><b>Needs</b> (raw, elicited) vs <b>requirements</b> (agreed, well-formed, verifiable)</li>
+      <li><b>Viewpoint</b> (the specification) vs <b>view</b> (the instance)</li>
+      <li><b>MBSE</b> (methodology) vs <b>SysML</b> (language)</li>
+    </ul>`)}
+  ${sec("Count checks",`
+    <ul>
+      <li>6 generic life cycle stages: concept, development, production, utilization, support, retirement</li>
+      <li>3 life cycle model approaches: sequential, incremental, evolutionary</li>
+      <li>30 processes in 4 groups: 2 / 6 / 8 / 14</li>
+      <li>4 verification methods: inspection, analysis, demonstration, test</li>
+      <li>12 quality characteristics (§3.1.2–3.1.13)</li>
+      <li>8 analyses and methods (§3.2.1–3.2.8)</li>
+      <li>4 SoS types: directed, acknowledged, collaborative, virtual</li>
+    </ul>`)}
+  ${sec("Chapter 1 discriminators",`
+    <h4>Systems around the SoI</h4>
+    <ul><li><b>Enabling</b>: supports the SoI's life cycle (build, transport, train, dispose) but isn't delivered.</li>
+    <li><b>Interfacing</b>: exchanges with the SoI in operation.</li>
+    <li><b>Interoperating</b>: works jointly with the SoI toward a shared outcome.</li></ul>
+    <h4>Other pairs</h4>
+    <ul><li><b>Modes</b> are deliberate operational configurations; <b>states</b> are conditions at a point in time.</li>
+    <li><b>Principles</b> transcend life cycle, system type and context, and aren't "how to". <b>Heuristics</b> come from experience; <b>conventions</b> from agreement.</li>
+    <li><b>Aleatory</b> uncertainty is inherent randomness; <b>epistemic</b> is lack of knowledge.</li>
+    <li><b>Complexity</b> is about interaction and unpredictability, not size.</li>
+    <li><b>Horizontal</b> view: one level of decomposition. <b>Vertical</b>: derivation between levels.</li></ul>
+    <h4>Cognitive biases (Table 1.5)</h4>
+    <p style="margin:0">Framing, representativeness, availability, anchoring, motivational, optimism, confirmation, groupthink, authority, rankism. Know the name and the mitigation in one line each.</p>`)}
+  ${sec("Quality characteristics and methods",`
+    <h4>12 quality characteristics · §3.1</h4>
+    <ul><li>Affordability — balance capability against life cycle cost within resources</li>
+    <li>Agility — the system's ability to respond to change</li>
+    <li>Human systems integration — the human as a system element</li>
+    <li>Interoperability — exchange and use information with other systems for a shared outcome</li>
+    <li>Logistics — the support system: spares, facilities, data, people</li>
+    <li>Manufacturability / producibility — can it be built consistently</li>
+    <li>RAM — perform when needed, for as long as needed, and be restored</li>
+    <li>Resilience — anticipate, absorb, adapt to and recover from disruption, including the unforeseen</li>
+    <li>Sustainability — environmental, social and economic impact over the life cycle</li>
+    <li>System safety — prevent harm to people, property, environment</li>
+    <li>System security — protect against deliberate hostile action</li>
+    <li>Loss-driven SE — start from unacceptable losses across safety, security and mission</li></ul>
+    <h4>8 methods · §3.2</h4>
+    <ul><li>Modeling, analysis and simulation</li><li>Prototyping — reduce uncertainty by building something partial</li>
+    <li>Traceability — coverage both ways, plus change impact</li><li>Interface management — define, control, verify</li>
+    <li>Architecture frameworks — viewpoints and conventions</li><li>Patterns — reusable solutions to recurring problems</li>
+    <li>Design thinking — human-centred, exploratory</li><li>Biomimicry — strategies borrowed from nature</li></ul>`)}
+  ${sec("Tailoring and system types",`
+    <ul><li><b>Tailoring</b> adapts process application to context, scale and risk — it can add rigour as well as remove it.</li>
+    <li><b>MBSE</b>: formalised modelling across the whole life cycle. <b>Agile SE</b>: respond to change, deliver incrementally — architecture still matters. <b>Lean</b>: maximise value, remove waste in the engineering process. <b>PLE</b>: shared core assets with planned variation.</li>
+    <li><b>Greenfield</b> vs <b>brownfield</b>: brownfield means designing within an installed base.</li>
+    <li><b>COTS</b>: the product constrains the requirements; the vendor controls evolution.</li>
+    <li><b>Cyber-physical</b>: computation and physical processes coupled by feedback.</li>
+    <li><b>Enterprise</b>: people, process and organisation are engineered elements too.</li></ul>
+    <h4>SoS types</h4>
+    <ul><li><b>Directed</b> — built and centrally managed for a purpose; constituents subordinated</li>
+    <li><b>Acknowledged</b> — recognised objectives and authority, constituents keep independence</li>
+    <li><b>Collaborative</b> — voluntary cooperation, no central authority</li>
+    <li><b>Virtual</b> — no central authority and no agreed purpose</li></ul>`)}
+  `;
+}
+
+/* ================= PROGRESS ================= */
+function rProgress(){
+  const as=areaStats(), cov=procCoverage();
+  const sets=S.sets.slice(-8).reverse(), rec=S.recall.slice(-5).reverse();
+  main.innerHTML=`<h2>Progress</h2>
+    ${readyHTML()}
+    <div class="eyebrow mono">Areas · last 10 attempts · red line is 70%</div>
+    ${as.map(s=>`<div class="bar"><span>${AREAS[s.k]}</span><span class="tr"><i style="width:${s.acc*100}%"></i><span class="line"></span></span><span class="v">${s.n?Math.round(s.acc*100)+"% · "+s.n:"untested"}</span></div>`).join("")}
+    <div class="eyebrow mono">Process coverage · yellow correct · red missed · blank untested</div>
+    ${GROUPS.map(g=>`<div class="mono small muted" style="margin:8px 0 4px">${g.n}</div><div class="cells">${cov.filter(c=>c.p.g===g.k).map(c=>`<div class="cell ${c.st}" title="${c.p.name} §${c.p.c}">${c.p.n}</div>`).join("")}</div>`).join("")}
+    <div class="eyebrow mono">Recent sets</div>
+    ${sets.length?sets.map(s=>`<div class="kv"><span>${dstr(s.d)} · ${s.mode}</span><span>${s.r}/${s.n} · ${pct(s.r,s.n)}%</span></div>`).join(""):`<p class="small muted">None yet.</p>`}
+    <div class="eyebrow mono">Recent recall sprints</div>
+    ${rec.length?rec.map(a=>`<div class="kv"><span>${dstr(a.d)}</span><span>${a.n}/30 · ${mmss(a.secs)}</span></div>`).join(""):`<p class="small muted">None yet.</p>`}
+    <div class="eyebrow mono">Home-screen badge</div>
+    <p class="small" style="margin:0 0 8px;line-height:1.5">Once the app is on your home screen, the icon can show how many readiness checks are still open. It clears when you're ready to book. iPhone asks for notification permission to allow this.</p>
+    <button class="btn ghost" id="pbadge">Turn on icon badge</button>
+    <div class="eyebrow mono">Move progress between devices</div>
+    <p class="small" style="margin:0 0 8px;line-height:1.5">Progress is stored on each device. Copy the code on one, paste it on the other.</p>
+    <div class="row" style="margin-top:0"><button class="btn ghost" id="pexp">Copy progress code</button><button class="btn ghost" id="pimp">Paste code</button></div>
+    <textarea id="pcode" hidden aria-label="Progress code"></textarea>
+    <div class="fb" id="pmsg"></div>
+    <div class="row"><button class="btn ghost" id="preset" style="color:var(--fail);border-color:var(--fail)">Reset all progress</button></div>`;
+  const msg=(t,c)=>{const m=document.getElementById("pmsg");m.textContent=t;m.className="fb "+(c||"");};
+  document.getElementById("pbadge").addEventListener("click",async()=>{
+    try{
+      if(!("Notification" in window)||!("setAppBadge" in navigator)){msg("Open the app from its home-screen icon first, then try again.","bad");return;}
+      const p=await Notification.requestPermission();
+      if(p==="granted"){badge();msg("Badge on.","ok");}else msg("Permission not granted.","bad");
+    }catch(e){msg("This browser doesn't support badges.","bad");}
+  });
+  const ta=document.getElementById("pcode");
+  document.getElementById("pexp").addEventListener("click",async()=>{
+    const code=btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+    ta.hidden=false;ta.value=code;ta.select();
+    try{await navigator.clipboard.writeText(code);msg("Copied. Paste it on the other device.","ok");}catch(e){msg("Select the code above and copy it.","");}
+  });
+  document.getElementById("pimp").addEventListener("click",()=>{
+    if(ta.hidden||!ta.value){ta.hidden=false;ta.value="";ta.placeholder="Paste the code here, then tap Paste code again";ta.focus();msg("");return;}
+    try{const o=JSON.parse(decodeURIComponent(escape(atob(ta.value.trim()))));if(!o||typeof o!=="object"||!o.items)throw 0;
+      S=Object.assign(def(),o);save();msg("Progress loaded.","ok");setTimeout(rProgress,600);}
+    catch(e){msg("That code didn't read. Copy it again in full.","bad");}
+  });
+  document.getElementById("preset").addEventListener("click",()=>{
+    if(!confirm("Clear all progress on this device? This can't be undone."))return;
+    S=def();save();rProgress();
+  });
+}
+
+/* ================= BOOT ================= */
+go("today"); badge();
+if("serviceWorker" in navigator&&location.protocol.startsWith("http")){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+})();
+</script>
+</body>
+</html>
